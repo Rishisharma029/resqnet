@@ -1373,3 +1373,24 @@ select.form-input { cursor: pointer; appearance: none; background-image: url("da
 .user-role-badge { font-size: 0.65rem; font-weight: 800; padding: 0.15rem 0.5rem; border-radius: 4px; letter-spacing: 0.05em; border: 1px solid transparent; }
 .user-role-badge.badge-full { background: var(--green-dim); border-color: rgba(0,255,136,0.3); color: var(--green); }
 .user-role-badge.badge-limited { background: var(--amber-dim); border-color: rgba(245,166,35,0.3); color: var(--amber); }
+
+/* --- Chart.js Infinite Resize Fix ------------- */
+.dash-card canvas {
+  max-height: 220px;
+  width: 100% !important;
+}
+.dash-card.span-2 canvas {
+  max-height: 280px;
+}
+
+/* --- Ultimate Chart.js Infinite Resize Fix ----- */
+.dash-card canvas {
+  display: block;
+  box-sizing: border-box;
+  max-height: 240px !important;
+  height: 100% !important;
+  width: 100% !important;
+}
+.dash-card.span-2 canvas {
+  max-height: 300px !important;
+}
