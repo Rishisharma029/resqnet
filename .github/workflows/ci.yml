@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: '**/package-lock.json'
+        
+    - name: Install Dependencies (Client)
+      run: npm install
+      working-directory: ./client
+      
+    - name: Install Dependencies (Server)
+      run: npm install
+      working-directory: ./server
+      
+    # Note: Add actual lint/test scripts here once they are defined in package.json
+    # - name: Lint and Test (Client)
+    #   run: |
+    #     npm run lint
+    #     npm test
+    #   working-directory: ./client
