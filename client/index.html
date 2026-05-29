@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ResQNet — AI-powered real-time disaster management command platform for emergency response, rescue coordination, and citizen safety." />
+  <title>ResQNet | Disaster Management Command Platform</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <!-- Leaflet.js -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════ LOADING SCREEN -->
+<div id="loading-screen">
+  <div class="loading-content">
+    <div class="loading-logo">
+      <div class="loading-icon-ring"></div>
+      <i data-lucide="shield-alert" class="loading-icon"></i>
+    </div>
+    <h1 class="loading-title">ResQNet</h1>
+    <p class="loading-sub">Disaster Management Command Platform</p>
+    <div class="loading-bar-wrap"><div class="loading-bar" id="loading-bar"></div></div>
+    <p class="loading-status" id="loading-status">Initializing systems...</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ AUTH MODAL -->
+<div id="auth-modal" class="modal-overlay hidden">
+  <div class="modal-box auth-box">
+    <div class="auth-logo"><i data-lucide="shield-alert"></i> ResQNet</div>
+    <h2 id="auth-title">Command Center Login</h2>
+    <p class="auth-subtitle">Secure access — Role-based authorization</p>
+    <div class="auth-role-select" id="auth-role-select">
+      <button class="role-btn active" data-role="citizen" onclick="selectRole('citizen')"><i data-lucide="user"></i> Citizen</button>
+      <button class="role-btn" data-role="volunteer" onclick="selectRole('volunteer')"><i data-lucide="heart-handshake"></i> Volunteer</button>
+      <button class="role-btn" data-role="admin" onclick="selectRole('admin')"><i data-lucide="crown"></i> Admin</button>
+      <button class="role-btn" data-role="rescue" onclick="selectRole('rescue')"><i data-lucide="siren"></i> Rescue</button>
+      <button class="role-btn" data-role="hospital" onclick="selectRole('hospital')"><i data-lucide="hospital"></i> Hospital</button>
+      <button class="role-btn" data-role="ngo" onclick="selectRole('ngo')"><i data-lucide="globe"></i> NGO</button>
+    </div>
+    <div class="form-group">
+      <label>Phone / Email</label>
+      <input type="text" id="auth-phone" placeholder="+91 98765 43210" class="form-input" />
+    </div>
+    <div class="form-group" id="otp-group" style="display:none;">
+      <label>OTP Code</label>
+      <div class="otp-inputs">
+        <input type="text" maxlength="1" class="otp-box" /> <input type="text" maxlength="1" class="otp-box" />
+        <input type="text" maxlength="1" class="otp-box" /> <input type="text" maxlength="1" class="otp-box" />
+        <input type="text" maxlength="1" class="otp-box" /> <input type="text" maxlength="1" class="otp-box" />
+      </div>
+    </div>
+    <button class="btn-primary btn-full" id="auth-btn" onclick="handleAuth()">Send OTP</button>
+    <p class="auth-demo-note">Demo: Click "Send OTP" then "Verify OTP" to enter</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SOS MODAL -->
+<div id="sos-modal" class="modal-overlay hidden">
+  <div class="modal-box sos-box">
+    <button class="modal-close" onclick="closeModal('sos-modal')"><i data-lucide="x"></i></button>
+    <div class="sos-header">
+      <div class="sos-pulse-ring"></div>
+      <div class="sos-pulse-ring" style="animation-delay:0.5s"></div>
+      <i data-lucide="alert-triangle" class="sos-icon"></i>
+    </div>
+    <h2>SOS ALERT SENT</h2>
+    <p class="sos-status-text">Emergency services have been notified</p>
+    <div class="sos-info-grid">
+      <div class="sos-info-card"><i data-lucide="map-pin"></i><span>Location</span><strong id="sos-location">Acquiring GPS...</strong></div>
+      <div class="sos-info-card"><i data-lucide="clock"></i><span>Time</span><strong id="sos-time">--:--:--</strong></div>
+      <div class="sos-info-card"><i data-lucide="user"></i><span>User</span><strong id="sos-user">Loading...</strong></div>
+      <div class="sos-info-card"><i data-lucide="radio"></i><span>ETA</span><strong>~4 mins</strong></div>
+    </div>
+    <div class="sos-actions">
+      <button class="btn-danger" onclick="triggerVoiceSOS()"><i data-lucide="mic"></i> Voice SOS</button>
+      <button class="btn-warning" onclick="triggerSilentSOS()"><i data-lucide="eye-off"></i> Silent Mode</button>
+      <button class="btn-secondary" onclick="closeModal('sos-modal')">Cancel Alert</button>
+    </div>
+    <p class="sos-offline-note"><i data-lucide="wifi-off"></i> Offline? SMS: <strong>RESQNET SOS</strong> to <strong>1070</strong></p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ MISSING PERSON MODAL -->
+<div id="missing-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('missing-modal')"><i data-lucide="x"></i></button>
+    <h2><i data-lucide="search"></i> Report Missing Person</h2>
+    <div class="form-row">
+      <div class="form-group"><label>Full Name</label><input type="text" class="form-input" placeholder="Name of missing person" /></div>
+      <div class="form-group"><label>Age</label><input type="number" class="form-input" placeholder="Age" /></div>
+    </div>
+    <div class="form-group"><label>Last Seen Location</label><input type="text" class="form-input" placeholder="Last known location" /></div>
+    <div class="form-group"><label>Photo Upload</label><div class="file-upload-zone" onclick="document.getElementById('missing-photo').click()"><i data-lucide="camera"></i><p>Upload Photo for AI Face Matching</p></div><input type="file" id="missing-photo" accept="image/*" hidden onchange="previewMissingPhoto(this)" /></div>
+    <div id="missing-photo-preview"></div>
+    <button class="btn-primary btn-full" onclick="submitMissingReport()"><i data-lucide="search"></i> Submit & Start AI Face Search</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ REPORT INCIDENT MODAL -->
+<div id="report-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('report-modal')"><i data-lucide="x"></i></button>
+    <h2><i data-lucide="alert-circle"></i> Report Incident</h2>
+    <div class="form-group">
+      <label>Incident Type</label>
+      <select class="form-input" id="report-type">
+        <option value="">Select type...</option>
+        <option>🌊 Flood</option><option>🔥 Fire</option><option>🏚 Building Collapse</option>
+        <option>⚗ Chemical Leak</option><option>🌊 Cyclone</option><option>🪨 Landslide</option>
+        <option>🚨 Riot</option><option>🏥 Medical Emergency</option><option>🔍 Missing Person</option><option>💧 Water Crisis</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Description</label><textarea class="form-input" rows="3" placeholder="Describe what you're seeing..."></textarea></div>
+    <div class="form-group"><label>Location</label><input type="text" class="form-input" placeholder="Auto-detected or enter manually" id="report-location" /></div>
+    <div class="form-group"><label>Evidence (Photo/Video)</label><div class="file-upload-zone" onclick="document.getElementById('report-file').click()"><i data-lucide="paperclip"></i><p>Attach photo, video, or voice note</p></div><input type="file" id="report-file" hidden /></div>
+    <div class="form-group"><label>Severity</label>
+      <div class="severity-picker">
+        <button class="severity-btn" data-sev="low" onclick="selectSeverity('low')">LOW</button>
+        <button class="severity-btn" data-sev="medium" onclick="selectSeverity('medium')">MEDIUM</button>
+        <button class="severity-btn active" data-sev="high" onclick="selectSeverity('high')">HIGH</button>
+        <button class="severity-btn" data-sev="critical" onclick="selectSeverity('critical')">CRITICAL</button>
+      </div>
+    </div>
+    <button class="btn-primary btn-full" onclick="submitIncidentReport()"><i data-lucide="send"></i> Submit Report</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ AR FIRST AID MODAL -->
+<div id="firstaid-modal" class="modal-overlay hidden">
+  <div class="modal-box ar-modal">
+    <button class="modal-close" onclick="closeModal('firstaid-modal')"><i data-lucide="x"></i></button>
+    <div class="ar-badge"><i data-lucide="zap"></i> AR GUIDE</div>
+    <h2>First Aid Instructions</h2>
+    <div class="firstaid-tabs">
+      <button class="fa-tab active" onclick="showFATab('cpr')">CPR</button>
+      <button class="fa-tab" onclick="showFATab('burn')">Burns</button>
+      <button class="fa-tab" onclick="showFATab('bleed')">Bleeding</button>
+      <button class="fa-tab" onclick="showFATab('choking')">Choking</button>
+    </div>
+    <div id="fa-content" class="fa-content"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ MAIN APP LAYOUT -->
+<div id="app" class="app-hidden">
+
+  <!-- TOP HEADER -->
+  <header class="top-header">
+    <div class="header-left">
+      <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()"><i data-lucide="menu"></i></button>
+      <div class="brand"><i data-lucide="shield-alert" class="brand-icon"></i><span class="brand-name">ResQNet</span></div>
+      <div class="alert-ticker" id="alert-ticker">
+        <i data-lucide="radio" class="ticker-icon pulse-dot"></i>
+        <div class="ticker-wrap"><div class="ticker-text" id="ticker-content">Loading live alerts...</div></div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="header-stat"><i data-lucide="activity"></i><span id="hdr-incidents">0</span> Active</div>
+      <div class="header-stat critical"><i data-lucide="alert-triangle"></i><span id="hdr-critical">0</span> Critical</div>
+      <div class="live-clock" id="live-clock">--:--:--</div>
+      <div class="weather-widget"><i data-lucide="cloud-rain"></i><span id="weather-temp">--°C</span></div>
+      <button class="header-btn" onclick="openModal('report-modal')" title="Report Incident"><i data-lucide="plus-circle"></i></button>
+      <button class="header-btn notification-btn" onclick="toggleNotifPanel()" title="Notifications"><i data-lucide="bell"></i><span class="notif-badge" id="notif-badge">3</span></button>
+      <div class="user-avatar-wrap">
+        <span id="user-role-badge" class="user-role-badge"></span>
+        <div class="user-avatar" onclick="showPanel('settings')" title="Settings" id="user-avatar">A</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- NOTIFICATION PANEL -->
+  <div class="notif-panel hidden" id="notif-panel">
+    <div class="notif-header"><h3>Notifications</h3><button onclick="clearNotifications()">Clear all</button></div>
+    <div class="notif-list" id="notif-list"></div>
+  </div>
+
+  <div class="app-body">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div id="role-access-banner" style="display:none; padding: 0 1rem;"></div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">COMMAND</div>
+        <button class="nav-item active" id="nav-dashboard" onclick="showPanel('dashboard')"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></button>
+        <button class="nav-item" id="nav-map" onclick="showPanel('map')"><i data-lucide="map"></i><span>Live Map</span></button>
+        <button class="nav-item" id="nav-incidents" onclick="showPanel('incidents')"><i data-lucide="alert-circle"></i><span>Incidents</span><span class="nav-badge" id="nav-incidents-badge">0</span></button>
+
+        <div class="nav-section-label">RESPONSE</div>
+        <button class="nav-item" id="nav-volunteers" onclick="showPanel('volunteers')"><i data-lucide="heart-handshake"></i><span>Volunteers</span></button>
+        <button class="nav-item" id="nav-resources" onclick="showPanel('resources')"><i data-lucide="package"></i><span>Resources</span></button>
+        <button class="nav-item" id="nav-healthcare" onclick="showPanel('healthcare')"><i data-lucide="heart-pulse"></i><span>Healthcare</span></button>
+        <button class="nav-item" id="nav-shelters" onclick="showPanel('shelters')"><i data-lucide="home"></i><span>Shelters</span></button>
+
+        <div class="nav-section-label">CITIZEN</div>
+        <button class="nav-item" id="nav-community" onclick="showPanel('community')"><i data-lucide="users"></i><span>Community</span></button>
+        <button class="nav-item" id="nav-missing" onclick="showPanel('missing')"><i data-lucide="search"></i><span>Missing Persons</span></button>
+        <button class="nav-item" id="nav-family" onclick="showPanel('family')"><i data-lucide="shield-check"></i><span>Family Safety</span></button>
+
+        <div class="nav-section-label">AI & INTEL</div>
+        <button class="nav-item" id="nav-ai" onclick="showPanel('ai')"><i data-lucide="bot"></i><span>AI Assistant</span></button>
+        <button class="nav-item" id="nav-analytics" onclick="showPanel('analytics')"><i data-lucide="bar-chart-2"></i><span>Analytics</span></button>
+        <button class="nav-item" id="nav-predict" onclick="showPanel('predict')"><i data-lucide="brain"></i><span>AI Prediction</span></button>
+
+        <div class="nav-section-label">ADVANCED</div>
+        <button class="nav-item" id="nav-iot" onclick="showPanel('iot')"><i data-lucide="cpu"></i><span>IoT Sensors</span></button>
+        <button class="nav-item" id="nav-broadcast" onclick="showPanel('broadcast')"><i data-lucide="radio"></i><span>Broadcast</span></button>
+        <button class="nav-item" id="nav-blockchain" onclick="showPanel('blockchain')"><i data-lucide="link"></i><span>Blockchain Log</span></button>
+        <button class="nav-item" id="nav-training" onclick="showPanel('training')"><i data-lucide="graduation-cap"></i><span>Training</span></button>
+        <button class="nav-item" id="nav-marketplace" onclick="showPanel('marketplace')"><i data-lucide="shopping-bag"></i><span>Marketplace</span></button>
+        <button class="nav-item" id="nav-satellite" onclick="showPanel('satellite')"><i data-lucide="satellite"></i><span>Satellite</span></button>
+        <button class="nav-item" id="nav-settings" onclick="showPanel('settings')"><i data-lucide="settings"></i><span>Settings</span></button>
+      </nav>
+
+      <!-- SOS BUTTON IN SIDEBAR -->
+      <div class="sidebar-sos">
+        <button class="sos-btn" id="sos-btn" onmousedown="startSOSHold()" onmouseup="cancelSOSHold()" onmouseleave="cancelSOSHold()" ontouchstart="startSOSHold()" ontouchend="cancelSOSHold()">
+          <i data-lucide="alert-triangle"></i>
+          <span>HOLD FOR SOS</span>
+          <div class="sos-progress-ring"><svg viewBox="0 0 60 60"><circle cx="30" cy="30" r="26" class="sos-ring-track"/><circle cx="30" cy="30" r="26" class="sos-ring-fill" id="sos-ring-fill"/></svg></div>
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content" id="main-content">
+
+      <!-- ════════════════════════════ PANEL: DASHBOARD -->
+      <div class="panel active" id="panel-dashboard">
+        <div class="panel-header">
+          <h1>Command Dashboard</h1>
+          <div class="panel-actions">
+            <span class="live-badge"><span class="pulse-dot"></span> LIVE</span>
+            <select class="form-input sm" id="city-select" onchange="changeCity(this.value)">
+              <option value="delhi">New Delhi</option><option value="mumbai">Mumbai</option>
+              <option value="chennai">Chennai</option><option value="kolkata">Kolkata</option>
+              <option value="bangalore">Bangalore</option><option value="hyderabad">Hyderabad</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- STAT CARDS -->
+        <div class="stat-grid">
+          <div class="stat-card critical"><div class="stat-icon"><i data-lucide="alert-triangle"></i></div><div class="stat-info"><span class="stat-label">Critical Incidents</span><span class="stat-value" id="stat-critical">0</span><span class="stat-change">+2 in last hour</span></div></div>
+          <div class="stat-card warning"><div class="stat-icon"><i data-lucide="users"></i></div><div class="stat-info"><span class="stat-label">People Affected</span><span class="stat-value" id="stat-affected">0</span><span class="stat-change">Across 3 districts</span></div></div>
+          <div class="stat-card success"><div class="stat-icon"><i data-lucide="heart-handshake"></i></div><div class="stat-info"><span class="stat-label">Volunteers Active</span><span class="stat-value" id="stat-volunteers">0</span><span class="stat-change">+12 this shift</span></div></div>
+          <div class="stat-card info"><div class="stat-icon"><i data-lucide="truck"></i></div><div class="stat-info"><span class="stat-label">Resources Deployed</span><span class="stat-value" id="stat-resources">0</span><span class="stat-change">3 units requested</span></div></div>
+          <div class="stat-card"><div class="stat-icon"><i data-lucide="home"></i></div><div class="stat-info"><span class="stat-label">Shelter Capacity</span><span class="stat-value" id="stat-shelter">0%</span><span class="stat-change">2 shelters full</span></div></div>
+          <div class="stat-card success"><div class="stat-icon"><i data-lucide="shield-check"></i></div><div class="stat-info"><span class="stat-label">Lives Saved Today</span><span class="stat-value" id="stat-saved">0</span><span class="stat-change">↑ 18% vs yesterday</span></div></div>
+        </div>
+
+        <!-- DASHBOARD GRID -->
+        <div class="dashboard-grid">
+          <!-- Mini Map -->
+          <div class="dash-card span-2">
+            <div class="card-header"><h3><i data-lucide="map-pin"></i> Live Incident Map</h3><button class="btn-sm" onclick="showPanel('map')">Expand <i data-lucide="maximize-2"></i></button></div>
+            <div id="mini-map" class="mini-map"></div>
+          </div>
+
+          <!-- Active Incidents Feed -->
+          <div class="dash-card">
+            <div class="card-header"><h3><i data-lucide="activity"></i> Live Incidents</h3><button class="btn-sm" onclick="showPanel('incidents')">View All</button></div>
+            <div class="incidents-feed" id="incidents-feed"></div>
+          </div>
+
+          <!-- Timeline -->
+          <div class="dash-card span-2">
+            <div class="card-header"><h3><i data-lucide="clock"></i> Event Timeline (24h)</h3></div>
+            <div class="timeline-wrap" id="timeline-wrap"></div>
+          </div>
+
+          <!-- Nearby Alerts -->
+          <div class="dash-card">
+            <div class="card-header"><h3><i data-lucide="map-pin"></i> Nearby Alerts</h3></div>
+            <div class="nearby-list" id="nearby-list"></div>
+          </div>
+
+          <!-- Response Metrics -->
+          <div class="dash-card">
+            <div class="card-header"><h3><i data-lucide="zap"></i> Response Metrics</h3></div>
+            <canvas id="chart-response" height="180"></canvas>
+          </div>
+
+          <!-- Disaster Type Breakdown -->
+          <div class="dash-card">
+            <div class="card-header"><h3><i data-lucide="pie-chart"></i> Incident Types</h3></div>
+            <canvas id="chart-types" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════ PANEL: LIVE MAP -->
+      <div class="panel" id="panel-map">
+        <div class="panel-header">
+          <h1><i data-lucide="map"></i> Interactive GIS Map</h1>
+          <div class="panel-actions">
+            <span class="live-badge"><span class="pulse-dot"></span> LIVE</span>
+          </div>
+        </div>
+        <div class="map-container">
+          <div class="map-controls">
+            <div class="map-control-group">
+              <span class="ctrl-label">Layers</span>
+              <button class="layer-btn active" id="layer-incidents" onclick="toggleLayer('incidents')"><i data-lucide="alert-triangle"></i> Incidents</button>
+              <button class="layer-btn" id="layer-flood" onclick="toggleLayer('flood')"><i data-lucide="droplets"></i> Flood Zones</button>
+              <button class="layer-btn" id="layer-safe" onclick="toggleLayer('safe')"><i data-lucide="navigation"></i> Safe Routes</button>
+              <button class="layer-btn" id="layer-rescue" onclick="toggleLayer('rescue')"><i data-lucide="siren"></i> Rescue Teams</button>
+              <button class="layer-btn" id="layer-shelter" onclick="toggleLayer('shelter')"><i data-lucide="home"></i> Shelters</button>
+              <button class="layer-btn" id="layer-crowd" onclick="toggleLayer('crowd')"><i data-lucide="users"></i> Crowd Density</button>
+            </div>
+            <div class="map-control-group">
+              <span class="ctrl-label">Disaster Filter</span>
+              <select class="form-input sm" id="disaster-filter" onchange="filterMapDisaster(this.value)">
+                <option value="all">All Types</option>
+                <option value="flood">Flood</option><option value="fire">Fire</option>
+                <option value="earthquake">Earthquake</option><option value="chemical">Chemical</option>
+                <option value="landslide">Landslide</option>
+              </select>
+            </div>
+          </div>
+          <div id="main-map" class="full-map"></div>
+          <div class="map-legend">
+            <div class="legend-item"><span class="legend-dot critical"></span> Critical</div>
+            <div class="legend-item"><span class="legend-dot high"></span> High</div>
+            <div class="legend-item"><span class="legend-dot medium"></span> Medium</div>
+            <div class="legend-item"><span class="legend-dot safe"></span> Safe Zone</div>
+            <div class="legend-item"><span class="legend-dot rescue"></span> Rescue Team</div>
+          </div>
+          <div class="map-info-panel hidden" id="map-info-panel">
+            <button class="map-info-close" onclick="document.getElementById('map-info-panel').classList.add('hidden')"><i data-lucide="x"></i></button>
+            <div id="map-info-content"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════ PANEL: INCIDENTS -->
+      <div class="panel" id="panel-incidents">
+        <div class="panel-header">
+          <h1><i data-lucide="alert-circle"></i> Active Incidents</h1>
+          <div class="panel-actions">
+            <input type="text" class="form-input sm" placeholder="Search incidents..." id="incident-search" oninput="searchIncidents(this.value)" />
+            <select class="form-input sm" id="sev-filter" onchange="filterIncidents(this.value)">
+              <option value="all">All Severities</option><option value="critical">Critical</option>
+              <option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option>
+            </select>
+            <button class="btn-primary" onclick="openModal('report-modal')"><i data-lucide="plus"></i> Report</button>
+          </div>
+        </div>
+        <div class="incidents-grid" id="incidents-grid"></div>
+      </div>
+
+      <!-- ════════════════════════════ PANEL: VOLUNTEERS -->
+      <div class="panel" id="panel-volunteers">
+        <div class="panel-header"><h1><i data-lucide="heart-handshake"></i> Volunteer Management</h1>
+          <div class="panel-actions"><button class="btn-primary" onclick="openVolunteerModal()"><i data-lucide="user-plus"></i> Register</button></div>
+        </div>
+        <div class="vol-stats"><div class="vol-stat"><i data-lucide="users"></i><span id="vol-total">0</span><label>Total Registered</label></div><div class="vol-stat"><i data-lucide="zap"></i><span id="vol-active">0</span><label>Active Now</label></div><div class="vol-stat"><i data-lucide="map-pin"></i><span id="vol-nearby">0</span><label>Nearby (5km)</label></div><div class="vol-stat"><i data-lucide="award"></i><span id="vol-hours">0</span><label>Hours Served</label></div></div>
+        <div class="panel-grid">
+          <div class="dash-card span-2">
+            <div class="card-header"><h3>Volunteer Directory</h3><input type="text" class="form-input sm" placeholder="Search volunteers..." oninput="searchVolunteers(this.value)" /></div>
+            <div class="volunteer-list" id="volunteer-list"></div>
+          </div>
+          <div class="dash-card">
+            <div class="card-header"><h3>Task Board</h3><button class="btn-sm" onclick="addTask()"><i data-lucide="plus"></i></button></div>
+            <div class="task-board" id="task-board"></div>
+          </div>
+          <div class="dash-card span-full">
+            <div class="card-header"><h3>Leaderboard — Top Responders</h3></div>
+            <div class="leaderboard" id="leaderboard"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════ PANEL: RESOURCES -->
+      <div class="panel" id="panel-resources">
+        <div class="panel-header"><h1><i data-lucide="package"></i> Resource Tracking</h1></div>
+        <div class="resource-grid" id="resource-grid"></div>
+        <div class="panel-grid" style="margin-top:1.5rem">
+          <div class="dash-card span-2">
+            <div class="card-header"><h3><i data-lucide="truck"></i> Ambulance Fleet</h3></div>
+            <div class="fleet-list" id="fleet-list"></div>
+          </div>
+          <div class="dash-card">
+            <div class="card-header"><h3>Request Resource</h3></div>
+            <div class="form-group"><label>Resource Type</label><select class="form-input"><option>Ambulance</option><option>Food Packets</option><option>Water Tanker</option><option>Generator</option><option>Rescue Boat</option><option>Medicines</option></select></div>
+            <div class="form-group"><label>Quantity</label><input type="number" class="form-input" placeholder="1" /></div>
+            <div class="form-group"><label>Location</label><input type="text" class="form-input" placeholder="Delivery location" /></div>
+            <div class="form-group"><label>Priority</label><select class="form-input"><option>Critical</option><option>High</option><option>Medium</option></select></div>
+            <button class="btn-primary btn-full" onclick="submitResourceRequest()"><i data-lucide="send"></i> Submit Request</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════ PANEL: HEALTHCARE -->
+      <div class="panel" id="panel-healthcare">
+        <div class="panel-header"><h1><i data-lucide="heart-pulse"></i> Emergency Medical System</h1>
+          <div class="panel-actions"><button class="btn-primary" onclick="openModal('firstaid-modal')"><i data-lucide="zap"></i> AR First Aid Guide</button></div>
+        </div>
+        <div class="hospital-grid" id="hospital-grid"></div>
+        <div class="panel-grid" style="margin-top:1.5rem">
+          <div class="dash-card">
+            <div class="card-header"><h3><i data-lucide="droplets"></i> Blood Bank Status</h3></div>
+            <div class="blood-grid" id="blood-grid"></div>
+          </div>
+          <div class="dash-card"><div class="card-header"><h3><i data-lucide="bar-chart-2"></i> ICU Availability</h3></div><canvas id="chart-icu" height="200"></canvas></div>
+          <div class="dash-card"><div class="card-header"><h3><i data-lucide="truck"></i> Ambulance Routing</h3></div><div id="ambulance-list" class="fleet-list"></div></div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════ PANEL: SHELTERS -->
+      <div class="panel" id="panel-shelters">
+        <div class="panel-header"><h1><i data-lucide="home"></i> Shelter Management</h1></div>
+        <div class="shelter-grid" id="shelter-grid"></div>
+      </div>
+
+      <!-- ════════════════════════════ PANEL: COMMUNITY -->
+      <div class="panel" id="panel-community">
+        <div class="panel-header"><h1><i data-lucide="users"></i> Community Reporting</h1>
+          <div class="panel-actions"><button class="btn-primary" onclick="openModal('report-modal')"><i data-lucide="plus"></i> New Report</button></div>
+        </div>
+        <div class="panel-grid">
+          <div class="dash-card span-2">
+            <div class="card-header"><h3>Community Feed</h3></div>
+            <div class="community-feed" id="community-feed"></div>
+          </div>
+          <div class="dash-card">
+            <div class="card-header"><h3>Fake News Detector</h3><span class="ai-badge">AI</span></div>
+            <p class="hint-text">Paste a rumour or emergency report to verify authenticity</p>
+            <textarea class="form-input" rows="4" id="fakenews-input" placeholder="Paste suspicious message here..."></textarea>
+            <button class="btn-primary btn-full" style="margin-top:0.75rem" onclick="checkFakeNews()"><i data-lucide="shield-check"></i> Verify with AI</button>
+            <div id="fakenews-result" class="fakenews-result hidden"></div>
+          </div>
+          <div class="dash-card">
+            <div class="card-header"><h3>Image Authenticity Check</h3><span class="ai-badge">AI</span></div>
+            <div class="file-upload-zone" onclick="document.getElementById('img-verify').click()"><i data-lucide="image"></i><p>Upload disaster image to verify</p></div>
+            <input type="file" id="img-verify" accept="image/*" hidden onchange="verifyImage(this)" />
+            <div id="img-result" class="fakenews-result hidden"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════ PANEL: MISSING PERSONS -->
+      <div class="panel" id="panel-missing">
+        <div class="panel-header"><h1><i data-lucide="search"></i> Missing Persons</h1>
+          <div class="panel-actions"><button class="btn-primary" onclick="openModal('missing-modal')"><i data-lucide="user-plus"></i> Report Missing</button></div>
+        </div>
+        <div class="missing-stats" id="missing-stats"></div>
+        <div class="missing-grid" id="missing-grid"></div>
+      </div>
+
+      <!-- ════════════════════════════ PANEL: FAMILY SAFETY -->
+      <div class="panel" id="panel-family">
+        <div class="panel-header"><h1><i data-lucide="shield-check"></i> Family Safety Check-In</h1></div>
+        <div class="family-container">
+          <div class="safety-hero">
+            <div class="safety-status-ring" id="safety-status-ring">
+              <div class="safety-status-icon"><i data-lucide="shield-check"></i></div>
+            </div>
+            <h2 id="safety-status-text">Status Unknown</h2>
+            <p id="safety-status-sub">Last checked: Never</p>
+            <div class="safety-actions">
+              <button class="btn-safe" onclick="markSafe()"><i data-lucide="check-circle"></i> I'm Safe</button>
+              <button class="btn-danger" onclick="markUnsafe()"><i data-lucide="alert-triangle"></i> Need Help</button>
+            </div>
+          </div>
+          <div class="family-members" id="family-members"></div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════ PANEL: AI ASSISTANT -->
+      <div class="panel" id="panel-ai">
+        <div class="panel-header"><h1><i data-lucide="bot"></i> AI Emergency Assistant</h1>
+          <div class="panel-actions">
+            <select class="form-input sm" id="ai-lang" onchange="changeAILang(this.value)">
+              <option value="en">English</option><option value="hi">Hindi</option>
+              <option value="ta">Tamil</option><option value="bn">Bengali</option>
+              <option value="pa">Punjabi</option><option value="mr">Marathi</option>
+            </select>
+            <button class="btn-sm" onclick="clearChat()"><i data-lucide="trash-2"></i> Clear</button>
+          </div>
+        </div>
+        <div class="ai-container">
+          <div class="chat-area" id="chat-area">
+            <div class="chat-welcome">
+              <div class="ai-avatar-large"><i data-lucide="bot"></i></div>
+              <h3>ResQNet AI Assistant</h3>
+              <p>I'm here to help during emergencies. Ask me anything — flood safety, first aid, shelter locations, evacuation routes.</p>
+              <div class="quick-replies" id="quick-replies">
+                <button class="qr-btn" onclick="sendQuickReply('What should I do during a flood?')">🌊 Flood Safety</button>
+                <button class="qr-btn" onclick="sendQuickReply('First aid for burns')">🔥 Burn First Aid</button>
+                <button class="qr-btn" onclick="sendQuickReply('Nearest shelter location')">🏠 Find Shelter</button>
+                <button class="qr-btn" onclick="sendQuickReply('Earthquake safety tips')">🌍 Earthquake Tips</button>
+                <button class="qr-btn" onclick="sendQuickReply('I am having a panic attack')">💆 Calm me down</button>
+                <button class="qr-btn" onclick="sendQuickReply('Emergency evacuation route')">🚗 Evacuation Route</button>
+              </div>
+            </div>
+          </div>
+          <div class="chat-input-area">
+            <button class="chat-voice-btn" onclick="toggleVoiceInput()" id="voice-input-btn" title="Voice Input"><i data-lucide="mic"></i></button>
+            <input type="text" id="chat-input" class="chat-input" placeholder="Ask anything about the emergency..." onkeydown="if(event.key==='Enter') sendMessage()" />
+            <button class="chat-send-btn" onclick="sendMessage()"><i data-lucide="send"></i></button>
+          </div>
+        </div>
+        <!-- Voice Command Bar -->
+        <div class="voice-command-bar" id="voice-cmd-bar">
+          <div class="voice-waves"><span></span><span></span><span></span><span></span><span></span></div>
+          <span>Listening... Try: "Dispatch ambulance to Sector 12" or "Show flood zone"</span>
+          <button onclick="stopVoiceCmd()"><i data-lucide="x"></i></button>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════ PANEL: ANALYTICS -->
+      <div class="panel" id="panel-analytics">
+        <div class="panel-header"><h1><i data-lucide="bar-chart-2"></i> Command Center Analytics</h1>
+          <div class="panel-actions">
+            <select class="form-input sm" onchange="updateAnalytics(this.value)"><option>Last 24 Hours</option><option>Last 7 Days</option><option>Last 30 Days</option></select>
+          </div>
+        </div>
+        <div class="analytics-grid">
+          <div class="dash-card span-2"><div class="card-header"><h3>Incident Trend</h3></div><canvas id="chart-trend" height="180"></canvas></div>
+          <div class="dash-card"><div class="card-header"><h3>District Heatmap</h3></div><div class="district-heatmap" id="district-heatmap"></div></div>
+          <div class="dash-card"><div class="card-header"><h3>Response Time</h3></div><canvas id="chart-resp-time" height="180"></canvas></div>
+          <div class="dash-card"><div class="card-header"><h3>Resource Utilization</h3></div><canvas id="chart-util" height="180"></canvas></div>
+          <div class="dash-card span-full"><div class="card-header"><h3>District-wise Disaster Analytics</h3></div><div class="analytics-table-wrap"><table class="analytics-table" id="analytics-table"></table></div></div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════ PANEL: AI PREDICTION -->
+      <div class="panel" id="panel-predict">
+        <div class="panel-header"><h1><i data-lucide="brain"></i> AI Prediction Engine</h1><div class="panel-actions"><span class="ai-badge">POWERED BY AI</span></div></div>
+        <div class="panel-grid">
+          <div class="dash-card span-2">
+            <div class="card-header"><h3>Disaster Spread Prediction Map</h3><button class="btn-sm" onclick="runPrediction()"><i data-lucide="play"></i> Run Prediction</button></div>
+            <div id="predict-map" class="mini-map"></div>
+          </div>
+          <div class="dash-card">
+            <div class="card-header"><h3>Smart Prioritization Engine</h3><span class="ai-badge">AI</span></div>
+            <div class="priority-list" id="priority-list"></div>
+          </div>
+          <div class="dash-card span-2">
+            <div class="card-header"><h3>Predictive Evacuation Routes</h3></div>
+            <div id="evac-routes" class="evac-routes-display"></div>
+          </div>
+          <div class="dash-card">
+            <div class="card-header"><h3>Survivor Detection AI</h3><span class="ai-badge">THERMAL</span></div>
+            <div class="thermal-display" id="thermal-display"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════ PANEL: IOT SENSORS -->
+      <div class="panel" id="panel-iot">
+        <div class="panel-header"><h1><i data-lucide="cpu"></i> IoT Sensor Network</h1><div class="panel-actions"><span class="live-badge"><span class="pulse-dot"></span> LIVE DATA</span></div></div>
+        <div class="sensor-grid" id="sensor-grid"></div>
+        <div class="panel-grid" style="margin-top:1.5rem">
+          <div class="dash-card span-2"><div class="card-header"><h3>Sensor History (Last 1 hour)</h3></div><canvas id="chart-sensor" height="180"></canvas></div>
+          <div class="dash-card"><div class="card-header"><h3>Smart Wearable Alerts</h3></div><div class="wearable-panel" id="wearable-panel"></div></div>
+          <div class="dash-card"><div class="card-header"><h3>Drone Fleet</h3></div><div class="drone-panel" id="drone-panel"></div></div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════ PANEL: BROADCAST -->
+      <div class="panel" id="panel-broadcast">
+        <div class="panel-header"><h1><i data-lucide="radio"></i> Emergency Broadcasting</h1></div>
+        <div class="panel-grid">
+          <div class="dash-card span-2">
+            <div class="card-header"><h3>Compose Emergency Alert</h3></div>
+            <div class="form-group"><label>Alert Type</label>
+              <div class="alert-type-btns">
+                <button class="alert-type-btn active" data-type="general" onclick="selectAlertType('general')"><i data-lucide="bell"></i> General</button>
+                <button class="alert-type-btn" data-type="evacuation" onclick="selectAlertType('evacuation')"><i data-lucide="arrow-right-circle"></i> Evacuation</button>
+                <button class="alert-type-btn" data-type="sos" onclick="selectAlertType('sos')"><i data-lucide="alert-triangle"></i> Emergency</button>
+                <button class="alert-type-btn" data-type="allclear" onclick="selectAlertType('allclear')"><i data-lucide="check-circle"></i> All Clear</button>
+              </div>
+            </div>
+            <div class="form-group"><label>Message</label><textarea class="form-input" id="broadcast-msg" rows="4" placeholder="Type emergency alert message..."></textarea></div>
+            <div class="form-group"><label>Target Area</label><input type="text" class="form-input" placeholder="e.g., North Delhi, Connaught Place (2km radius)" /></div>
+            <div class="form-group"><label>Channels</label>
+              <div class="channel-toggles">
+                <label class="toggle-item"><input type="checkbox" checked /><span class="toggle-slider"></span> SMS</label>
+                <label class="toggle-item"><input type="checkbox" checked /><span class="toggle-slider"></span> Push Notification</label>
+                <label class="toggle-item"><input type="checkbox" /><span class="toggle-slider"></span> WhatsApp</label>
+                <label class="toggle-item"><input type="checkbox" /><span class="toggle-slider"></span> Telegram Bot</label>
+                <label class="toggle-item"><input type="checkbox" /><span class="toggle-slider"></span> Email</label>
+                <label class="toggle-item"><input type="checkbox" /><span class="toggle-slider"></span> Siren</label>
+              </div>
+            </div>
+            <div class="form-group"><label>Language</label>
+              <div class="lang-checkboxes">
+                <label><input type="checkbox" checked /> English</label>
+                <label><input type="checkbox" checked /> Hindi</label>
+                <label><input type="checkbox" /> Tamil</label>
+                <label><input type="checkbox" /> Bengali</label>
+                <label><input type="checkbox" /> Punjabi</label>
+              </div>
+            </div>
+            <button class="btn-danger btn-full" onclick="sendBroadcast()"><i data-lucide="radio"></i> BROADCAST NOW</button>
+          </div>
+          <div class="dash-card">
+            <div class="card-header"><h3>Broadcast History</h3></div>
+            <div class="broadcast-history" id="broadcast-history"></div>
+          </div>
+          <div class="dash-card">
+            <div class="card-header"><h3>Offline Mesh Status</h3></div>
+            <div class="offline-mesh" id="offline-mesh"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════ PANEL: BLOCKCHAIN -->
+      <div class="panel" id="panel-blockchain">
+        <div class="panel-header"><h1><i data-lucide="link"></i> Blockchain Incident Ledger</h1><div class="panel-actions"><span class="ai-badge crypto-badge"><i data-lucide="shield-check"></i> IMMUTABLE</span></div></div>
+        <div class="blockchain-container">
+          <div class="blockchain-stats" id="blockchain-stats"></div>
+          <div class="blockchain-chain" id="blockchain-chain"></div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════ PANEL: TRAINING -->
+      <div class="panel" id="panel-training">
+        <div class="panel-header"><h1><i data-lucide="graduation-cap"></i> Disaster Preparedness Training</h1></div>
+        <div class="training-tabs">
+          <button class="training-tab active" onclick="showTrainingTab('lessons')"><i data-lucide="book-open"></i> Lessons</button>
+          <button class="training-tab" onclick="showTrainingTab('quiz')"><i data-lucide="help-circle"></i> Quiz</button>
+          <button class="training-tab" onclick="showTrainingTab('certs')"><i data-lucide="award"></i> Certificates</button>
+        </div>
+        <div id="training-content" class="training-content"></div>
+      </div>
+
+      <!-- ════════════════════════════ PANEL: MARKETPLACE -->
+      <div class="panel" id="panel-marketplace">
+        <div class="panel-header"><h1><i data-lucide="shopping-bag"></i> Emergency Marketplace</h1>
+          <div class="panel-actions">
+            <button class="btn-primary" onclick="openDonateModal()"><i data-lucide="heart"></i> Donate</button>
+          </div>
+        </div>
+        <div class="market-tabs">
+          <button class="market-tab active" onclick="showMarketTab('requests')">Emergency Requests</button>
+          <button class="market-tab" onclick="showMarketTab('donations')">Donations</button>
+          <button class="market-tab" onclick="showMarketTab('ngos')">NGO Portal</button>
+        </div>
+        <div id="market-content" class="market-content"></div>
+      </div>
+
+      <!-- ════════════════════════════ PANEL: SATELLITE -->
+      <div class="panel" id="panel-satellite">
+        <div class="panel-header"><h1><i data-lucide="satellite"></i> Satellite Data Visualization</h1><div class="panel-actions"><span class="live-badge"><span class="pulse-dot"></span> LIVE FEED</span></div></div>
+        <div class="satellite-container">
+          <div class="satellite-map-wrap">
+            <div id="satellite-map" class="full-map"></div>
+            <div class="satellite-overlays">
+              <button class="sat-overlay-btn active" onclick="toggleSatOverlay('flood')"><i data-lucide="droplets"></i> Flood Expansion</button>
+              <button class="sat-overlay-btn" onclick="toggleSatOverlay('fire')"><i data-lucide="flame"></i> Fire Spread</button>
+              <button class="sat-overlay-btn" onclick="toggleSatOverlay('weather')"><i data-lucide="cloud"></i> Weather</button>
+              <button class="sat-overlay-btn" onclick="toggleSatOverlay('thermal')"><i data-lucide="thermometer"></i> Thermal</button>
+            </div>
+          </div>
+          <div class="satellite-data-panel">
+            <div class="sat-metric"><span class="sat-label">Cloud Cover</span><div class="sat-bar"><div class="sat-bar-fill" style="width:73%"></div></div><span class="sat-val">73%</span></div>
+            <div class="sat-metric"><span class="sat-label">Precipitation</span><div class="sat-bar"><div class="sat-bar-fill warning" style="width:58%"></div></div><span class="sat-val">58mm/h</span></div>
+            <div class="sat-metric"><span class="sat-label">Wind Speed</span><div class="sat-bar"><div class="sat-bar-fill" style="width:42%"></div></div><span class="sat-val">42 km/h</span></div>
+            <div class="sat-metric"><span class="sat-label">Flood Risk Index</span><div class="sat-bar"><div class="sat-bar-fill critical" style="width:87%"></div></div><span class="sat-val critical-text">HIGH</span></div>
+            <div class="card-header" style="margin-top:1rem"><h3>Digital Twin Simulation</h3></div>
+            <div class="digital-twin" id="digital-twin"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════ PANEL: SETTINGS -->
+      <div class="panel" id="panel-settings">
+        <div class="panel-header"><h1><i data-lucide="settings"></i> Settings & Profile</h1></div>
+        <div class="panel-grid">
+          <div class="dash-card">
+            <div class="card-header"><h3>Profile</h3></div>
+            <div class="profile-card" id="profile-card"></div>
+          </div>
+          <div class="dash-card">
+            <div class="card-header"><h3>Role & Permissions</h3></div>
+            <div class="role-matrix" id="role-matrix"></div>
+          </div>
+          <div class="dash-card">
+            <div class="card-header"><h3>Notifications</h3></div>
+            <div class="settings-list">
+              <label class="setting-row"><span>Critical Alerts</span><input type="checkbox" class="toggle" checked /></label>
+              <label class="setting-row"><span>Weather Warnings</span><input type="checkbox" class="toggle" checked /></label>
+              <label class="setting-row"><span>Nearby Incidents</span><input type="checkbox" class="toggle" checked /></label>
+              <label class="setting-row"><span>Volunteer Tasks</span><input type="checkbox" class="toggle" /></label>
+              <label class="setting-row"><span>SMS Backup</span><input type="checkbox" class="toggle" /></label>
+              <label class="setting-row"><span>Email Digest</span><input type="checkbox" class="toggle" /></label>
+            </div>
+          </div>
+          <div class="dash-card">
+            <div class="card-header"><h3>API Integrations</h3></div>
+            <div class="api-status-list" id="api-status-list"></div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- GLOBAL VOICE COMMAND FAB -->
+  <button class="voice-fab" id="voice-fab" onclick="startVoiceCommand()" title="AI Voice Command"><i data-lucide="mic"></i></button>
+
+  <!-- TOAST CONTAINER -->
+  <div class="toast-container" id="toast-container"></div>
+
+</div>
+
+<!-- Main JS -->
+<script src="app.js"></script>
+</body>
+</html>
