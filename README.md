@@ -3,6 +3,7 @@
   <h1>ResqNet</h1>
   <p><em>Next-Generation Real-Time Disaster Response & Coordination Platform</em></p>
   
+  [![License: CC BY-ND 4.0](https://img.shields.io/badge/License-CC%20BY--ND%204.0-lightgrey.svg)](http://creativecommons.org/licenses/by-nd/4.0/)
   [![Live Demo](https://img.shields.io/badge/LIVE_DEMO-RISHISHARMA029.GITHUB.IO%2FRESQNET-73e7ae?style=for-the-badge&logo=github&logoColor=white&labelColor=555555)](https://rishisharma029.github.io/resqnet)
   <br/>
   [![Repo](https://img.shields.io/badge/-GITHUB.COM%2FRISHISHARMA029%2FRESQNET-73e7ae?style=for-the-badge)](https://github.com/Rishisharma029/resqnet)
