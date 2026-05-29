@@ -3,9 +3,12 @@
   <h1>ResqNet</h1>
   <p><em>Next-Generation Real-Time Disaster Response & Coordination Platform</em></p>
   
-  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-  [![Status: Active](https://img.shields.io/badge/Status-Active-success.svg)]()
-  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)]()
+  [![Live Demo](https://img.shields.io/badge/LIVE_DEMO-RISHISHARMA029.GITHUB.IO%2FRESQNET-73e7ae?style=for-the-badge&logo=github&logoColor=white&labelColor=555555)](https://rishisharma029.github.io/resqnet)
+  <br/>
+  [![Repo](https://img.shields.io/badge/-GITHUB.COM%2FRISHISHARMA029%2FRESQNET-73e7ae?style=for-the-badge)](https://github.com/Rishisharma029/resqnet)
+  [![GitHub](https://img.shields.io/badge/GITHUB-RISHISHARMA029-ffffff?style=for-the-badge&logo=github&logoColor=white&labelColor=555555)](https://github.com/Rishisharma029)
+  <br/>
+  [![Email](https://img.shields.io/badge/EMAIL-I.RISHISHARMA2007%40GMAIL.COM-73e7ae?style=for-the-badge&logo=telegram&logoColor=white&labelColor=555555)](mailto:i.rishisharma2007@gmail.com)
 </div>
 
 <br />
@@ -129,7 +132,7 @@ sequenceDiagram
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/resqnet.git
+   git clone https://github.com/Rishisharma029/resqnet.git
    cd resqnet
    ```
 
