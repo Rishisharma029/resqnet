@@ -35,7 +35,11 @@ const AppState = {
 function setState(path, value) {
   const keys = path.split('.');
   let obj = AppState;
-  for (let i = 0; i < keys.length - 1; i++) obj = obj[keys[i]];
+  for (let i = 0; i < keys.length - 1; i++) {
+    if (['__proto__', 'constructor', 'prototype'].includes(keys[i])) return;
+    obj = obj[keys[i]];
+  }
+  if (['__proto__', 'constructor', 'prototype'].includes(keys[keys.length - 1])) return;
   obj[keys[keys.length - 1]] = value;
 }
 
@@ -1214,7 +1218,8 @@ function sendQuickReply(msg) {
 function appendChatMessage(role, content) {
   const area = document.getElementById('chat-area');
   const lang = AppState.chat.lang;
-  const formattedContent = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+  const escapeHTML = (str) => String(str).replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
+  const formattedContent = escapeHTML(content).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
   const msg = document.createElement('div');
   msg.className = `chat-message ${role}`;
   if (role === 'user') {
@@ -1751,7 +1756,7 @@ function renderQuiz() {
       <div class="quiz-question">
         <div class="quiz-q-text">${q.q}</div>
         <div class="quiz-options">${q.options.map((opt, i) => `
-          <button class="quiz-option" id="quiz-opt-${i}" onclick="answerQuiz(${i}, ${q.answer}, '${q.explanation.replace(/'/g, "\\'")}')">
+          <button class="quiz-option" id="quiz-opt-${i}" onclick="answerQuiz(${i}, ${q.answer}, decodeURIComponent('${encodeURIComponent(q.explanation)}'))">
             ${String.fromCharCode(65+i)}. ${opt}
           </button>
         `).join('')}</div>
@@ -2171,7 +2176,8 @@ function showToast(type, message) {
   if (!container) return;
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
-  toast.innerHTML = `<div class="toast-icon"></div><span>${message}</span>`;
+  toast.innerHTML = `<div class="toast-icon"></div><span></span>`;
+  toast.querySelector('span').textContent = message;
   container.appendChild(toast);
   setTimeout(() => { toast.classList.add('toast-fade-out'); setTimeout(() => toast.remove(), 300); }, 3500);
 }
