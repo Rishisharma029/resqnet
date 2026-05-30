@@ -2297,7 +2297,7 @@ function animateCounter(id, target) {
 }
 
 // ═══════════════════════════════════════════════════ MISC
-function openVolunteerModal() { showToast('info', '📋 Volunteer registration form loading...'); }
+
 
 // Notification panel close on outside click
 document.addEventListener('click', (e) => {
