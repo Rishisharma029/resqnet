@@ -352,9 +352,11 @@ function addBlock(action, data) {
 }
 
 // ═══════════════════════════════════════════════════ INITIALIZATION
-window.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', runLoadingSequence);
+} else {
   runLoadingSequence();
-});
+}
 
 function runLoadingSequence() {
   const steps = [
@@ -2314,3 +2316,137 @@ function maybeInitSensorChart() {
 }
 
 // IoT sensor chart auto-initializes when showPanel('iot') is called
+
+// Exposing functions to global window object for inline HTML handlers
+window.setState = setState;
+window.isFullAccess = isFullAccess;
+window.hasPermission = hasPermission;
+window.applyRoleUI = applyRoleUI;
+window.showAccessDenied = showAccessDenied;
+window.generateBlockHash = generateBlockHash;
+window.addBlock = addBlock;
+window.runLoadingSequence = runLoadingSequence;
+window.showApp = showApp;
+window.selectRole = selectRole;
+window.handleAuth = handleAuth;
+window.setupOTPInputs = setupOTPInputs;
+window.launchApp = launchApp;
+window.initializeApp = initializeApp;
+window.changeCity = changeCity;
+window.updateTicker = updateTicker;
+window.showPanel = showPanel;
+window.toggleSidebar = toggleSidebar;
+window.initMiniMap = initMiniMap;
+window.initMainMap = initMainMap;
+window.initPredictMap = initPredictMap;
+window.initSatelliteMap = initSatelliteMap;
+window.addMarkersToMap = addMarkersToMap;
+window.addPredictionOverlay = addPredictionOverlay;
+window.updateMaps = updateMaps;
+window.toggleLayer = toggleLayer;
+window.filterMapDisaster = filterMapDisaster;
+window.renderIncidentsFeed = renderIncidentsFeed;
+window.renderIncidentsGrid = renderIncidentsGrid;
+window.showIncidentDetail = showIncidentDetail;
+window.renderTimeline = renderTimeline;
+window.renderNearby = renderNearby;
+window.searchIncidents = searchIncidents;
+window.filterIncidents = filterIncidents;
+window.dispatchVolunteer = dispatchVolunteer;
+window.showOnMap = showOnMap;
+window.populateVolunteers = populateVolunteers;
+window.renderVolunteers = renderVolunteers;
+window.renderTasks = renderTasks;
+window.renderLeaderboard = renderLeaderboard;
+window.searchVolunteers = searchVolunteers;
+window.assignVolunteer = assignVolunteer;
+window.openVolunteerModal = openVolunteerModal;
+window.addTask = addTask;
+window.populateResources = populateResources;
+window.renderResources = renderResources;
+window.renderFleet = renderFleet;
+window.submitResourceRequest = submitResourceRequest;
+window.populateShelters = populateShelters;
+window.renderShelters = renderShelters;
+window.populateHospitals = populateHospitals;
+window.populateBloodBank = populateBloodBank;
+window.populateMissingPersons = populateMissingPersons;
+window.previewMissingPhoto = previewMissingPhoto;
+window.submitMissingReport = submitMissingReport;
+window.populateFamilySafety = populateFamilySafety;
+window.markSafe = markSafe;
+window.markUnsafe = markUnsafe;
+window.populateCommunityFeed = populateCommunityFeed;
+window.checkFakeNews = checkFakeNews;
+window.verifyImage = verifyImage;
+window.submitIncidentReport = submitIncidentReport;
+window.selectSeverity = selectSeverity;
+window.sendMessage = sendMessage;
+window.sendQuickReply = sendQuickReply;
+window.appendChatMessage = appendChatMessage;
+window.showTypingIndicator = showTypingIndicator;
+window.removeTypingIndicator = removeTypingIndicator;
+window.getAIResponse = getAIResponse;
+window.clearChat = clearChat;
+window.changeAILang = changeAILang;
+window.toggleVoiceInput = toggleVoiceInput;
+window.startSOSHold = startSOSHold;
+window.cancelSOSHold = cancelSOSHold;
+window.triggerSOS = triggerSOS;
+window.triggerVoiceSOS = triggerVoiceSOS;
+window.triggerSilentSOS = triggerSilentSOS;
+window.selectAlertType = selectAlertType;
+window.sendBroadcast = sendBroadcast;
+window.renderBroadcastHistory = renderBroadcastHistory;
+window.populateBroadcastHistory = populateBroadcastHistory;
+window.renderAnalytics = renderAnalytics;
+window.renderDistrictHeatmap = renderDistrictHeatmap;
+window.renderAnalyticsTable = renderAnalyticsTable;
+window.updateAnalytics = updateAnalytics;
+window.renderPredictions = renderPredictions;
+window.renderPriorityList = renderPriorityList;
+window.renderEvacRoutes = renderEvacRoutes;
+window.renderThermalDisplay = renderThermalDisplay;
+window.runPrediction = runPrediction;
+window.populateIoTSensors = populateIoTSensors;
+window.startSensorUpdates = startSensorUpdates;
+window.populateWearables = populateWearables;
+window.populateDrones = populateDrones;
+window.populateBlockchain = populateBlockchain;
+window.renderBlockchain = renderBlockchain;
+window.populateTraining = populateTraining;
+window.showTrainingTab = showTrainingTab;
+window.renderQuiz = renderQuiz;
+window.answerQuiz = answerQuiz;
+window.populateMarketplace = populateMarketplace;
+window.showMarketTab = showMarketTab;
+window.fulfillRequest = fulfillRequest;
+window.submitDonation = submitDonation;
+window.openDonateModal = openDonateModal;
+window.toggleSatOverlay = toggleSatOverlay;
+window.renderDigitalTwin = renderDigitalTwin;
+window.populateSettings = populateSettings;
+window.initCharts = initCharts;
+window.initResponseChart = initResponseChart;
+window.initTypesChart = initTypesChart;
+window.initICUChart = initICUChart;
+window.initAnalyticsCharts = initAnalyticsCharts;
+window.initSensorChart = initSensorChart;
+window.chartOptions = chartOptions;
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.showFATab = showFATab;
+window.populateNotifications = populateNotifications;
+window.renderNotifications = renderNotifications;
+window.toggleNotifPanel = toggleNotifPanel;
+window.clearNotifications = clearNotifications;
+window.addNotification = addNotification;
+window.showToast = showToast;
+window.startVoiceCommand = startVoiceCommand;
+window.stopVoiceCmd = stopVoiceCmd;
+window.processVoiceCommand = processVoiceCommand;
+window.startLiveClock = startLiveClock;
+window.startWeatherUpdate = startWeatherUpdate;
+window.startRealtimeSimulation = startRealtimeSimulation;
+window.animateCounter = animateCounter;
+window.maybeInitSensorChart = maybeInitSensorChart;
